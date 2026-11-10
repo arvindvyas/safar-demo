@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Safar – Transport operations demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Hind:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5FA; --surface:#FFFFFF; --surface-2:#EBEEF6; --line:#D9DEEA;
+  --ink:#18203A; --ink-2:#52607F; --brand:#1E3A8A; --brand-ink:#FFFFFF;
+  --accent:#F2A900; --good:#17804F; --good-bg:#E3F4EA; --bad:#B8392A; --bad-bg:#FBE7E3;
+  --warn:#8A5A00; --warn-bg:#FFF2CC; --plate:#F7C600; --plate-ink:#141414;
+  --shadow:0 1px 2px rgba(24,32,58,.06),0 4px 16px rgba(24,32,58,.06);
+  --head:"Archivo",system-ui,sans-serif; --body:"Hind","Segoe UI",system-ui,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1528; --surface:#171F38; --surface-2:#1F2847; --line:#2C365A;
+    --ink:#E8ECF7; --ink-2:#9AA6C6; --brand:#6F93F2; --brand-ink:#0F1528;
+    --good:#5BCB92; --good-bg:#16352A; --bad:#F08A7B; --bad-bg:#3D1E1B;
+    --warn:#F5C45A; --warn-bg:#3A2E10; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1528; --surface:#171F38; --surface-2:#1F2847; --line:#2C365A;
+  --ink:#E8ECF7; --ink-2:#9AA6C6; --brand:#6F93F2; --brand-ink:#0F1528;
+  --good:#5BCB92; --good-bg:#16352A; --bad:#F08A7B; --bad-bg:#3D1E1B;
+  --warn:#F5C45A; --warn-bg:#3A2E10; --shadow:none; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+h1,h2,h3{font-family:var(--head);font-stretch:90%;margin:0;line-height:1.15}
+h1{font-size:1.75rem;font-weight:750}
+h2{font-size:1.2rem;font-weight:700}
+h3{font-size:1rem;font-weight:650}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+img{max-width:100%}
+
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+.side{background:var(--brand);color:#fff;padding:24px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .side{background:#131B33;border-right:1px solid var(--line)}}
+:root[data-theme="dark"] .side{background:#131B33;border-right:1px solid var(--line)}
+.logo{font-family:var(--head);font-weight:800;font-size:1.6rem;font-stretch:80%;letter-spacing:.01em;display:flex;align-items:center;gap:10px;margin:0 8px 24px}
+.logo i{display:inline-block;width:14px;height:28px;background:var(--accent);border-radius:3px;transform:skewX(-14deg)}
+.nav a{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.82);text-decoration:none;font-weight:500}
+.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav a[aria-current="page"]{background:rgba(255,255,255,.14);color:#fff}
+.nav a[aria-current="page"]::before{content:"";width:4px;height:18px;background:var(--accent);border-radius:2px;margin-left:-6px}
+.nav svg{width:20px;height:20px;flex:none}
+.side .foot{margin-top:auto;font-size:.85rem;color:rgba(255,255,255,.65);padding:0 8px}
+.side .foot button{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;margin-top:8px}
+
+main{padding:28px clamp(16px,4vw,40px) 48px;max-width:1180px;width:100%}
+.demo-note{display:inline-flex;gap:8px;align-items:center;font-size:.85rem;color:var(--warn);background:var(--warn-bg);padding:4px 10px;border-radius:999px;margin-bottom:14px}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.head p{margin:4px 0 0;color:var(--ink-2)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:8px;line-height:1.2}
+.btn:hover{border-color:var(--ink-2)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.small{padding:6px 10px;font-size:.9rem}
+.btn.ghost{background:none;border-color:transparent;color:var(--brand)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.panel>.ph{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line);gap:12px}
+.panel>.pb{padding:16px 18px}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:20px;overflow:hidden}
+.stat{padding:16px 18px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat b{display:block;font-family:var(--head);font-size:1.9rem;font-weight:750;font-stretch:85%;font-variant-numeric:tabular-nums}
+.stat span{color:var(--ink-2);font-size:.92rem}
+
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:20px}
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;gap:12px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line)}
+.list li:last-child{border-bottom:0}
+.list .grow{flex:1;min-width:0}
+.list small{color:var(--ink-2);display:block}
+
+.tag{display:inline-block;font-size:.8rem;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.tag.good{background:var(--good-bg);color:var(--good)}
+.tag.bad{background:var(--bad-bg);color:var(--bad)}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}
+.tag.info{background:var(--surface-2);color:var(--ink-2)}
+
+/* The number plate: yellow commercial plate */
+.plate{display:inline-block;font-family:var(--head);font-stretch:75%;font-weight:750;font-size:.92rem;letter-spacing:.06em;background:var(--plate);color:var(--plate-ink);border:2px solid var(--plate-ink);border-radius:5px;padding:1px 7px;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
+.plate.big{font-size:1.25rem;padding:3px 12px}
+
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th{text-align:left;font-weight:600;color:var(--ink-2);font-size:.85rem;padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--surface-2)}
+.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.muted{color:var(--ink-2)}
+
+.bars{display:flex;align-items:flex-end;gap:10px;height:150px;padding-top:10px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.bar i{display:block;width:100%;max-width:42px;background:var(--brand);border-radius:6px 6px 2px 2px}
+.bar i.low{background:var(--bad)}
+.bar span{font-size:.75rem;color:var(--ink-2);white-space:nowrap}
+
+/* Trip pipeline */
+.steps{display:flex;gap:4px;margin-top:6px}
+.steps i{flex:1;height:5px;border-radius:3px;background:var(--surface-2)}
+.steps i.on{background:var(--brand)}
+.trips{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.trip{padding:16px 18px;cursor:pointer;text-align:left;width:100%}
+.trip:hover{border-color:var(--ink-2)}
+.route{font-family:var(--head);font-weight:700;font-size:1.1rem;font-stretch:88%;margin:10px 0 2px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:.95rem}
+.kv dt{color:var(--ink-2)}
+.kv dd{margin:0}
+
+.tabs{display:flex;gap:6px;background:var(--surface-2);padding:4px;border-radius:12px;margin-bottom:16px;overflow-x:auto}
+.tabs button{border:0;background:none;padding:8px 12px;border-radius:9px;cursor:pointer;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+.form{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.form .full{grid-column:1/-1}
+label{display:block;font-size:.88rem;font-weight:600;color:var(--ink-2);margin-bottom:4px}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+textarea{min-height:110px;resize:vertical}
+.filled{border-color:var(--good);background:var(--good-bg)}
+.hint{font-size:.85rem;color:var(--ink-2);margin-top:4px}
+
+/* Modal */
+.scrim{position:fixed;inset:0;background:rgba(10,15,30,.45);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:50;overflow-y:auto}
+.scrim.open{display:flex}
+.modal{width:100%;max-width:720px;background:var(--surface);border-radius:16px;border:1px solid var(--line)}
+.modal .mh{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);gap:12px}
+.modal .mb{padding:18px 20px}
+.modal .mf{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.x{border:0;background:var(--surface-2);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.1rem;flex:none}
+
+.money{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line)}
+.money.total{border-bottom:0;font-weight:700;font-family:var(--head);font-size:1.1rem;padding-top:12px}
+.callout{border-radius:12px;padding:12px 14px;margin-top:12px}
+.callout.good{background:var(--good-bg);color:var(--good)}
+.callout.bad{background:var(--bad-bg);color:var(--bad)}
+
+.scan{border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--ink-2)}
+.spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spinner{animation-duration:2.5s}}
+
+.ms{list-style:none;margin:0 0 12px;padding:0}
+.ms li{position:relative;padding:3px 0 10px 26px;color:var(--ink-2)}
+.ms li::before{content:"";position:absolute;left:3px;top:9px;width:12px;height:12px;border-radius:50%;border:2px solid var(--line);background:var(--surface);z-index:1}
+.ms li::after{content:"";position:absolute;left:8px;top:20px;bottom:-6px;width:2px;background:var(--line)}
+.ms li:last-child::after{display:none}
+.ms li.done{color:var(--ink)}
+.ms li.done::before{background:var(--brand);border-color:var(--brand)}
+.ms li.done::after{background:var(--brand)}
+.ms li.now{color:var(--ink);font-weight:600}
+.ms li.now::before{border-color:var(--accent);background:var(--accent)}
+.wa{background:#DCF8C6;color:#111;border-radius:12px 12px 12px 4px;padding:12px 14px;white-space:pre-wrap;font-size:.95rem;max-width:460px}
+
+/* Bilty */
+.bilty{border:2px solid var(--ink);border-radius:6px;padding:16px;font-size:.92rem}
+.bilty .top{display:flex;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:10px;flex-wrap:wrap}
+.bilty .co{font-family:var(--head);font-weight:800;font-size:1.3rem;font-stretch:80%}
+.bilty .cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.bilty .box{border:1px solid var(--line);border-radius:4px;padding:8px}
+.bilty .box b{display:block;font-size:.78rem;color:var(--ink-2);font-weight:600}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.bottom-nav{display:none}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .side{display:none}
+  main{padding-bottom:96px}
+  .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:40}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;font-size:.72rem;color:var(--ink-2);text-decoration:none;font-weight:600}
+  .bottom-nav a[aria-current="page"]{color:var(--brand)}
+  .bottom-nav svg{width:22px;height:22px}
+  .stats{grid-template-columns:1fr 1fr}
+  .stat:nth-child(2){border-right:0}
+  .stat:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .grid2{grid-template-columns:1fr}
+  .form{grid-template-columns:1fr}
+  .scrim{padding:0}
+  .modal{border-radius:0;min-height:100%;border:0}
+  .bilty .cols{grid-template-columns:1fr}
+  .mobile-logo{display:flex !important}
+}
+.mobile-logo{display:none;font-family:var(--head);font-weight:800;font-size:1.3rem;font-stretch:80%;gap:8px;align-items:center;margin-bottom:10px;color:var(--brand)}
+.mobile-logo i{display:inline-block;width:10px;height:20px;background:var(--accent);border-radius:2px;transform:skewX(-14deg)}
+@media print{
+  body *{visibility:hidden}
+  .bilty,.bilty *{visibility:visible}
+  .bilty{position:absolute;left:0;top:0;width:100%}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="logo"><i></i>Safar</div>
+    <nav class="nav" id="sideNav"></nav>
+    <div class="foot">Mehta Roadlines, Ahmedabad<br>
+      <button id="themeBtn" type="button">Switch light/dark</button>
+    </div>
+  </aside>
+  <main id="view"></main>
+</div>
+<nav class="bottom-nav" id="bottomNav"></nav>
+
+<div class="scrim" id="scrim" role="dialog" aria-modal="true"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+const ICONS={
+ today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>',
+ bookings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>',
+ trips:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h11v9H2zM13 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>',
+ payments:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5h10M7 9h10M10 5c3 0 4 2 4 4s-2 4-5 4l6 6"/></svg>',
+ intl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>',
+ fleet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>'
+};
+const VIEWS=[["today","Today"],["bookings","Bookings"],["trips","Trips"],["intl","International"],["payments","Payments"],["fleet","Fleet & docs"]];
+
+// ---------- helpers ----------
+const $=s=>document.querySelector(s);
+const rs=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+const DAY=864e5, now=new Date(); now.setHours(0,0,0,0);
+const d=off=>new Date(now.getTime()+off*DAY);
+const fmt=dt=>dt.toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+const iso=dt=>{const z=new Date(dt.getTime()-dt.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2800)}
+
+// ---------- sample data ----------
+const customers=[
+ {id:"c1",name:"Shree Textiles",city:"Surat",gst:"24AAKFS4821K1Z3",phone:"98250 41122",material:"Textile bales"},
+ {id:"c2",name:"Patel Agro Foods",city:"Ahmedabad",gst:"24AACCP7730L1Z9",phone:"99099 23014",material:"Packaged food"},
+ {id:"c3",name:"Kaveri Ceramics",city:"Morbi",gst:"24AAGFK2209M1Z1",phone:"97277 80451",material:"Ceramic tiles"},
+ {id:"c4",name:"Mehta Pharma",city:"Vadodara",gst:"24AABCM5512N1Z6",phone:"98980 66230",material:"Medicines"},
+ {id:"c5",name:"Om Steel Traders",city:"Rajkot",gst:"24AAEFO9087P1Z4",phone:"94262 11809",material:"Steel pipes"}
+];
+const routes=[
+ {from:"Surat",to:"Pune",km:420,rate:38000,diesel:12500,toll:3200},
+ {from:"Ahmedabad",to:"Mumbai",km:530,rate:42000,diesel:15800,toll:4100},
+ {from:"Morbi",to:"Delhi",km:1050,rate:78000,diesel:31000,toll:7900},
+ {from:"Vadodara",to:"Indore",km:350,rate:26000,diesel:10400,toll:1900},
+ {from:"Rajkot",to:"Ahmedabad",km:215,rate:16500,diesel:6400,toll:950},
+ {from:"Morbi",to:"Mundra",km:150,rate:18000,diesel:4600,toll:600},
+ {from:"Surat",to:"Hazira",km:30,rate:6500,diesel:1200,toll:0},
+ {from:"Ahmedabad",to:"Vadodara",km:110,rate:8500,diesel:3300,toll:450},
+ {from:"Nhava Sheva",to:"Vadodara",km:420,rate:32000,diesel:12600,toll:3100},
+ {from:"Vadodara",to:"Mundra",km:450,rate:34000,diesel:13500,toll:2800}
+];
+const CITIES=["Surat","Pune","Ahmedabad","Mumbai","Morbi","Delhi","Vadodara","Indore","Rajkot","Jaipur","Nashik","Mundra","Hazira","Nhava Sheva","Pipavav"];
+const vehicles=[
+ {no:"GJ 05 AB 4821",model:"Tata 1618",own:true,driver:"Ramesh Yadav",docs:{Insurance:9,Permit:140,Fitness:62,PUC:21}},
+ {no:"GJ 01 KT 7730",model:"Ashok Leyland 2518",own:true,driver:"Sukhdev Singh",docs:{Insurance:210,Permit:-3,Fitness:95,PUC:44}},
+ {no:"GJ 03 BW 2209",model:"Eicher Pro 3015",own:true,driver:"Imran Shaikh",docs:{Insurance:120,Permit:300,Fitness:12,PUC:80}},
+ {no:"GJ 36 T 9087",model:"Tata Signa 2823",own:true,driver:"Bhavesh Rathod",docs:{Insurance:330,Permit:180,Fitness:200,PUC:60}},
+ {no:"GJ 06 AZ 3341",model:"BharatBenz 1617",own:true,driver:"Mahendra Patel",docs:{Insurance:75,Permit:250,Fitness:160,PUC:5}},
+ {no:"MH 04 HN 5512",model:"Hired · broker Ramesh Bhai",own:false,driver:"Santosh Jadhav",hire:13500,docs:{Insurance:40,Permit:90,Fitness:120,PUC:30}}
+];
+const STEPS=["Booked","Loaded","In transit","Delivered","Settled"];
+let lrSeq=2046;
+const trips=[
+ {lr:"LR-2041",cust:"c1",from:"Surat",to:"Pune",date:d(-3),veh:"GJ 05 AB 4821",material:"Textile bales",weight:18,freight:38000,advance:20000,status:"Delivered",
+  exp:[{t:"Diesel",a:12400,n:"HP pump, Bharuch"},{t:"Toll",a:3200,n:"FASTag"},{t:"Food",a:900,n:""},{t:"Unloading",a:1500,n:"Hamali"}]},
+ {lr:"LR-2042",cust:"c2",from:"Ahmedabad",to:"Mumbai",date:d(-1),veh:"GJ 01 KT 7730",material:"Packaged food",weight:16,freight:42000,advance:22000,status:"In transit",
+  exp:[{t:"Diesel",a:9800,n:"IOCL, Vapi"},{t:"Toll",a:2700,n:"FASTag"}]},
+ {lr:"LR-2043",cust:"c3",from:"Morbi",to:"Delhi",date:d(-2),veh:"GJ 36 T 9087",material:"Ceramic tiles",weight:24,freight:78000,advance:35000,status:"In transit",
+  exp:[{t:"Diesel",a:18200,n:"BPCL, Udaipur"},{t:"Toll",a:4300,n:"FASTag"},{t:"Food",a:1200,n:""}]},
+ {lr:"LR-2044",cust:"c4",from:"Vadodara",to:"Indore",date:d(0),veh:"GJ 03 BW 2209",material:"Medicines",weight:9,freight:26000,advance:12000,status:"Loaded",exp:[]},
+ {lr:"LR-2045",cust:"c5",from:"Rajkot",to:"Ahmedabad",date:d(-5),veh:"MH 04 HN 5512",material:"Steel pipes",weight:20,freight:16500,advance:0,status:"Settled",
+  exp:[{t:"Loading",a:800,n:""}]},
+ {lr:"LR-2040",cust:"c1",from:"Surat",to:"Pune",date:d(-8),veh:"GJ 06 AZ 3341",material:"Textile bales",weight:17,freight:38000,advance:20000,status:"Settled",
+  exp:[{t:"Diesel",a:12800,n:""},{t:"Toll",a:3200,n:""},{t:"Food",a:800,n:""}]}
+];
+const SHIP={
+ "LR-2041":{job:"JOB-1052",inv:null,cnee:"Vastra Bhandar",cneeAddr:"Laxmi Road, Pune",pick:"Ring Road, Surat",pkgs:120,pkgType:"bales",value:845000,custInv:"ST/1187",ewb:"3410 5528 7741"},
+ "LR-2042":{job:"JOB-1053",inv:null,cnee:"FreshMart Distributors",cneeAddr:"Bhiwandi, Thane",pick:"Changodar, Ahmedabad",pkgs:640,pkgType:"cartons",value:612000,custInv:"PAF/2290",ewb:"3410 5531 0926"},
+ "LR-2043":{job:"JOB-1054",inv:null,cnee:"Tile World",cneeAddr:"Kirti Nagar, Delhi",pick:"8-A Highway, Morbi",pkgs:1150,pkgType:"boxes",value:1180000,custInv:"KC/0714",ewb:"3410 5529 4418"},
+ "LR-2044":{job:"JOB-1055",inv:null,cnee:"Indore Medico Agencies",cneeAddr:"Siyaganj, Indore",pick:"Makarpura GIDC, Vadodara",pkgs:210,pkgType:"cartons",value:1450000,custInv:"MP/3302",ewb:"3410 5533 8150"},
+ "LR-2045":{job:"JOB-1050",inv:"INV-329",cnee:"Shah Builders Supply",cneeAddr:"Odhav, Ahmedabad",pick:"Aji GIDC, Rajkot",pkgs:85,pkgType:"bundles",value:960000,custInv:"OST/0561",ewb:"3410 5520 6634"},
+ "LR-2040":{job:"JOB-1048",inv:"INV-331",cnee:"Vastra Bhandar",cneeAddr:"Laxmi Road, Pune",pick:"Ring Road, Surat",pkgs:115,pkgType:"bales",value:810000,custInv:"ST/1159",ewb:"3410 5512 3307"}
+};
+trips.forEach(t=>Object.assign(t,SHIP[t.lr]));
+let jobSeq=1056, invSeq=332;
+const invoices=[
+ {no:"INV-318",cust:"c1",amt:114000,days:47,lrs:["LR-2027","LR-2029","LR-2033"],paid:false},
+ {no:"INV-322",cust:"c3",amt:156000,days:31,lrs:["LR-2034","LR-2037"],paid:false},
+ {no:"INV-325",cust:"c2",amt:84000,days:18,lrs:["LR-2031","LR-2035"],paid:false},
+ {no:"INV-327",cust:"c4",amt:52000,days:9,lrs:["LR-2030","LR-2032"],paid:false},
+ {no:"INV-331",cust:"c1",amt:38000,days:6,lrs:["LR-2040"],paid:false},
+ {no:"INV-329",cust:"c5",amt:33000,days:4,lrs:["LR-2039","LR-2045"],paid:false},
+ {no:"INV-330",cust:"c2",amt:42000,days:2,lrs:["LR-2038"],paid:false}
+];
+const USD=84.2;
+const MS_EXP=["Booking confirmed","Cargo picked up","Customs cleared","Gate-in at port","On board","Arrived at destination","Delivered"];
+const MS_IMP=["Pre-alert received","Departed origin","Arrived","Bill of entry filed","Duty paid","Customs cleared","Delivered"];
+const intl=[
+ {job:"EXP-2611",kind:"Export",mode:"Sea FCL",cust:"c3",inco:"CIF",
+  parties:{"Shipper":"Kaveri Ceramics, Morbi","Consignee":"Al Noor Building Materials LLC, Dubai","Notify party":"Same as consignee","Overseas agent":"Gulf Link Shipping, Dubai","Shipping line":"Maersk","Customs broker (CHA)":"Om Customs Brokers, Mundra"},
+  pol:"Mundra, India",pod:"Jebel Ali, UAE",etd:2,eta:8,
+  ship:{"Containers":"2 × 40′ HC","Container no.":"MSKU 482193-0, MSKU 517720-4","Seal no.":"ML-773102, ML-773115","Vessel / voyage":"Maersk Kensington / 446W","B/L no.":"MAEU 261144731","Shipping bill":"8841207","HS code":"6907 21","Goods":"Vitrified tiles, 2,300 boxes, 52 ton","Linked trucking":"LR-2038, LR-2039 (Morbi to Mundra)"},
+  ms:MS_EXP,at:3,
+  docs:[["Commercial invoice",1],["Packing list",1],["Shipping bill",1],["Certificate of origin",0],["Bill of lading",0],["Insurance certificate",0]],
+  cost:[["Ocean freight","USD",1450,1700],["Trucking to port","INR",36000,42000],["CHA and customs","INR",9500,12500],["Port and terminal charges","INR",18400,21000],["B/L and documentation","INR",3000,4500],["Insurance","USD",80,120]]},
+ {job:"IMP-2604",kind:"Import",mode:"Air",cust:"c4",inco:"FCA",
+  parties:{"Shipper":"Huaxin Pharma Materials, Shanghai","Consignee":"Mehta Pharma, Vadodara","Overseas agent":"Pacific Air Logistics, Shanghai","Airline":"Emirates SkyCargo","Customs broker (CHA)":"Om Customs Brokers, Ahmedabad"},
+  pol:"Shanghai (PVG), China",pod:"Ahmedabad (AMD), India",etd:-3,eta:-1,
+  ship:{"MAWB no.":"176-48213374","HAWB no.":"PAL-55120","Packages":"18 drums, 620 kg","Bill of entry":"7730521","HS code":"2942 00","Goods":"Pharma raw material","Duty":"₹1,84,600, paid by consignee"},
+  ms:MS_IMP,at:4,
+  docs:[["Commercial invoice",1],["Packing list",1],["Airway bill",1],["Bill of entry",1],["IEC and import licence",1],["Delivery order",0]],
+  cost:[["Air freight","USD",1860,2150],["Destination handling","INR",7200,9000],["CHA and customs","INR",8500,11500],["Delivery to Vadodara","INR",6500,8500]]},
+ {job:"EXP-2614",kind:"Export",mode:"Sea LCL",cust:"c1",inco:"FOB",
+  parties:{"Shipper":"Shree Textiles, Surat","Consignee":"Lanka Fabrics (Pvt) Ltd, Colombo","Overseas agent":"Serendib Freight, Colombo","Co-loader":"Allcargo","Customs broker (CHA)":"Om Customs Brokers, Hazira"},
+  pol:"Hazira, India",pod:"Colombo, Sri Lanka",etd:6,eta:11,
+  ship:{"Volume":"14 CBM, 3.2 ton","Packages":"64 bales","Shipping bill":"Not filed yet","HS code":"5208 52","Goods":"Printed cotton fabric","Linked trucking":"Not booked yet"},
+  ms:MS_EXP,at:0,
+  docs:[["Commercial invoice",1],["Packing list",0],["Shipping bill",0],["Certificate of origin",0],["Bill of lading",0]],
+  cost:[["Ocean freight (LCL)","USD",420,520],["CFS charges","INR",8400,10500],["CHA and customs","INR",6500,8500]]}
+];
+const inr=(cur,a)=>cur==="USD"?a*USD:a;
+const costTot=(j,k)=>j.cost.reduce((s,c)=>s+inr(c[1],c[k]),0);
+const cm=(cur,a)=>cur==="USD"?"$"+a.toLocaleString("en-US"):rs(a);
+const port=x=>x.split(",")[0];
+const cust=id=>customers.find(c=>c.id===id);
+const veh=no=>vehicles.find(v=>v.no===no);
+const expTotal=t=>t.exp.reduce((s,e)=>s+e.a,0);
+const profit=t=>t.freight-expTotal(t)-(veh(t.veh).own?0:veh(t.veh).hire);
+const plate=no=>`<span class="plate">${esc(no)}</span>`;
+
+// ---------- navigation ----------
+function navHTML(){
+ const cur=current();
+ return VIEWS.map(([k,l])=>`<a href="#${k}" ${k===cur?'aria-current="page"':""}>${ICONS[k]}<span>${l}</span></a>`).join("");
+}
+function current(){const h=location.hash.slice(1);return VIEWS.some(v=>v[0]===h)?h:"today"}
+function render(){
+ $("#sideNav").innerHTML=navHTML(); $("#bottomNav").innerHTML=navHTML();
+ const v=current();
+ $("#view").innerHTML=`<div class="mobile-logo"><i></i>Safar</div><div class="demo-note">Demo with sample data. Nothing you do here is saved.</div>`+R[v]();
+ window.scrollTo(0,0);
+}
+
+// ---------- views ----------
+const R={};
+R.today=()=>{
+ const onRoad=trips.filter(t=>t.status==="In transit"||t.status==="Loaded").length;
+ const dues=invoices.filter(i=>!i.paid).reduce((s,i)=>s+i.amt,0);
+ const expiring=[];vehicles.forEach(v=>Object.entries(v.docs).forEach(([k,x])=>{if(x<=30)expiring.push({v,k,x})}));
+ const unsettled=trips.filter(t=>t.status==="Delivered");
+ const overdue=invoices.filter(i=>!i.paid&&i.days>30);
+ const recent=[...trips].sort((a,b)=>a.date-b.date).slice(-6);
+ const max=Math.max(...recent.map(profit));
+ const hello=new Date().getHours()<12?"Good morning":"Good evening";
+ return `
+ <div class="head"><div><h1>${hello}, Mehta ji</h1><p>${now.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}</p></div>
+  <div class="row"><a class="btn primary" href="#bookings" data-act="newbooking">New booking</a></div></div>
+ <div class="stats">
+  <div class="stat"><b>${onRoad}</b><span>Trucks on the road</span></div>
+  <div class="stat"><b>${trips.filter(t=>t.date>=d(-1)).length}</b><span>Bookings since yesterday</span></div>
+  <div class="stat"><b>₹${(dues/1e5).toFixed(1)} L</b><span>Pending from customers</span></div>
+  <div class="stat"><b>${expiring.length}</b><span>Documents expiring in 30 days</span></div>
+ </div>
+ <div class="grid2">
+  <section class="panel"><div class="ph"><h2>Needs your attention</h2></div>
+   <ul class="list">
+    ${overdue.map(i=>`<li><span class="tag bad">${i.days} days</span><div class="grow"><b>${esc(cust(i.cust).name)}</b> owes ${rs(i.amt)}<small>${i.no}, unpaid since ${fmt(d(-i.days))}</small></div><button class="btn small" data-act="remind" data-id="${i.no}">Send reminder</button></li>`).join("")}
+    ${intl.filter(j=>j.etd>=0&&j.etd<=3&&j.docs.some(x=>!x[1])).map(j=>`<li><span class="tag warn">Docs</span><div class="grow"><b>${j.job}</b> sails in ${j.etd} days with ${j.docs.filter(x=>!x[1]).length} documents pending<small>${port(j.pol)} to ${port(j.pod)}, ${esc(cust(j.cust).name)}</small></div><button class="btn small" data-act="ijob" data-id="${j.job}">Open job</button></li>`).join("")}
+    ${unsettled.map(t=>`<li><span class="tag warn">Settle</span><div class="grow"><b>${esc(veh(t.veh).driver)}</b>’s trip is delivered but not settled<small>${t.lr}, ${t.from} to ${t.to}</small></div><button class="btn small" data-act="trip" data-id="${t.lr}">Open trip</button></li>`).join("")}
+    ${expiring.sort((a,b)=>a.x-b.x).map(e=>`<li><span class="tag ${e.x<0?"bad":"warn"}">${e.x<0?"Expired":e.x+" days"}</span><div class="grow">${plate(e.v.no)} ${e.k} ${e.x<0?"expired "+(-e.x)+" days ago":"expires on "+fmt(d(e.x))}</div></li>`).join("")}
+   </ul></section>
+  <section class="panel"><div class="ph"><h2>Profit on recent trips</h2><a class="btn small ghost" href="#trips">All trips</a></div>
+   <div class="pb"><div class="bars">${recent.map(t=>`<div class="bar" title="${t.lr}: ${rs(profit(t))}"><span>${rs(profit(t)).replace("₹","₹ ")}</span><i class="${profit(t)<5000?"low":""}" style="height:${Math.max(6,profit(t)/max*100)}%"></i><span>${t.to}</span></div>`).join("")}</div>
+   <p class="hint">Freight minus diesel, toll, driver costs and hire charges. Calculated automatically from each trip.</p></div></section>
+ </div>`;
+};
+
+function invStatus(no){const i=invoices.find(x=>x.no===no);if(!i)return "";return i.paid?'<span class="tag good">Paid</span>':`<span class="tag ${i.days>30?"bad":i.days>15?"warn":"info"}">${i.days?"Unpaid, "+i.days+" days":"Unpaid, sent today"}</span>`}
+function bookingRows(q){
+ q=(q||"").toLowerCase().replace(/\s+/g,"");
+ const rows=[...trips].sort((a,b)=>b.date-a.date).filter(t=>!q||[t.job,t.lr,t.inv||"",t.custInv||"",t.ewb||"",t.veh,cust(t.cust).name,t.cnee||""].join("|").toLowerCase().replace(/\s+/g,"").includes(q));
+ if(!rows.length)return `<tr><td colspan="9" class="muted">No booking matches that. Try a job ID, LR no., invoice no., e-way bill or truck number.</td></tr>`;
+ return rows.map(t=>`<tr class="click" data-act="trip" data-id="${t.lr}">
+   <td><b>${t.job}</b></td><td>${t.lr}</td><td>${fmt(t.date)}</td><td>${esc(cust(t.cust).name)}<small class="muted" style="display:block">to ${esc(t.cnee||"")}</small></td><td>${t.from} to ${t.to}</td><td>${plate(t.veh)}</td><td class="num">${rs(t.freight)}</td><td>${t.inv?t.inv:'<span class="muted">Not billed</span>'}</td><td>${statusTag(t.status)}</td></tr>`).join("");
+}
+R.bookings=()=>`
+ <div class="head"><div><h1>Bookings</h1><p>Every booking gets a job ID and creates its LR and trip automatically.</p></div>
+  <button class="btn primary" data-act="newbooking">New booking</button></div>
+ <div style="margin-bottom:14px;max-width:520px"><label for="q">Find a booking</label><input id="q" type="search" placeholder="Job ID, LR no., invoice no., e-way bill or truck"></div>
+ <section class="panel"><div class="table-wrap"><table>
+  <thead><tr><th>Job ID</th><th>LR no.</th><th>Date</th><th>Customer</th><th>Route</th><th>Truck</th><th class="num">Freight</th><th>Invoice</th><th>Status</th></tr></thead>
+  <tbody id="brows">${bookingRows("")}</tbody>
+ </table></div></section>`;
+
+function statusTag(s){return `<span class="tag ${s==="Settled"?"good":s==="Delivered"?"warn":"info"}">${s}</span>`}
+
+R.trips=()=>{
+ const groups=["Loaded","In transit","Delivered","Settled","Booked"];
+ const sorted=[...trips].sort((a,b)=>groups.indexOf(a.status)-groups.indexOf(b.status));
+ return `<div class="head"><div><h1>Trips</h1><p>Tap a trip to see expenses, driver settlement and profit.</p></div></div>
+ <div class="trips">${sorted.map(t=>{const i=STEPS.indexOf(t.status);return `
+  <button class="panel trip" data-act="trip" data-id="${t.lr}">
+   <div class="row" style="justify-content:space-between">${plate(t.veh)} ${statusTag(t.status)}</div>
+   <div class="route">${t.from} to ${t.to}</div>
+   <div class="muted">${t.job}, ${t.lr} for ${esc(cust(t.cust).name)}, ${fmt(t.date)}</div>
+   <div class="steps" aria-label="${t.status}">${STEPS.map((s,j)=>`<i class="${j<=i?"on":""}"></i>`).join("")}</div>
+  </button>`}).join("")}</div>`;
+};
+
+R.intl=()=>`<div class="head"><div><h1>International</h1><p>Sea and air jobs from booking to delivery, with documents, customs and costing in one place.</p></div><button class="btn primary" data-act="newintl">New international job</button></div>
+ <div class="trips">${intl.map(j=>`<button class="panel trip" data-act="ijob" data-id="${j.job}">
+  <div class="row" style="justify-content:space-between"><b>${j.job}</b><span class="tag info">${j.kind}, ${j.mode}</span></div>
+  <div class="route">${port(j.pol)} to ${port(j.pod)}</div>
+  <div class="muted">${esc(cust(j.cust).name)}, ETD ${fmt(d(j.etd))}, ETA ${fmt(d(j.eta))}</div>
+  <div class="muted" style="margin-top:6px">Now: <b style="color:var(--ink)">${j.ms[j.at]}</b></div>
+  <div class="steps">${j.ms.map((s,k)=>`<i class="${k<=j.at?"on":""}"></i>`).join("")}</div>
+ </button>`).join("")}</div>`;
+
+let intlSeq=2615;
+const PORTS=["Mundra","Nhava Sheva","Hazira","Pipavav","Ahmedabad (AMD)","Mumbai (BOM)","Jebel Ali, UAE","Colombo, Sri Lanka","Singapore","Rotterdam, Netherlands","Hamburg, Germany","New York, USA","Shanghai (PVG), China","Shanghai, China"];
+const RATE={"Mundra|Jebel Ali, UAE|Sea FCL":[1450,1700],"Hazira|Colombo, Sri Lanka|Sea LCL":[420,520],"Shanghai (PVG), China|Ahmedabad (AMD)|Air":[1860,2150],"Nhava Sheva|Rotterdam, Netherlands|Sea FCL":[2100,2450],"Shanghai, China|Nhava Sheva|Sea FCL":[980,1200],"Mumbai (BOM)|New York, USA|Air":[2600,3050]};
+const iv=id=>($("#"+id)||{}).value||"";
+function intlForm(){
+ const o=(a,sel)=>a.map(x=>`<option ${x===sel?"selected":""}>${esc(x)}</option>`).join("");
+ openModal(mh("New international job")+`<div class="mb"><div class="form">
+  <div><label for="i_kind">Job type</label><select id="i_kind">${o(["Export","Import"])}</select></div>
+  <div><label for="i_mode">Mode</label><select id="i_mode">${o(["Sea FCL","Sea LCL","Air"])}</select></div>
+  <div class="full"><label for="i_cust">Customer</label><select id="i_cust"><option value="">Choose customer</option>${customers.map(c=>`<option value="${c.id}">${esc(c.name)}, ${c.city}</option>`).join("")}</select><div class="hint">Their IEC, GST and address fill in from the saved customer.</div></div>
+  <div><label for="i_pol">Port of loading</label><select id="i_pol">${o(PORTS,"Mundra")}</select></div>
+  <div><label for="i_pod">Port of discharge</label><select id="i_pod">${o(PORTS,"Jebel Ali, UAE")}</select></div>
+  <div><label for="i_etd">ETD</label><input type="date" id="i_etd" value="${iso(d(7))}"></div>
+  <div><label for="i_eta">ETA</label><input type="date" id="i_eta" value="${iso(d(13))}"></div>
+  <div><label for="i_inco">Incoterm</label><select id="i_inco">${o(["FOB","CIF","CFR","EXW","FCA","DAP","DDP"])}</select></div>
+  <div><label for="i_cont">Containers</label><input id="i_cont" placeholder="e.g. 2 × 40′ HC"></div>
+  <div><label for="i_party" id="l_party">Overseas buyer (consignee)</label><input id="i_party" placeholder="Company, city"></div>
+  <div><label for="i_agent">Overseas agent</label><input id="i_agent" placeholder="Agent at destination"></div>
+  <div><label for="i_goods">Goods</label><input id="i_goods" placeholder="Fills from customer"></div>
+  <div><label for="i_hs">HS code</label><input id="i_hs" placeholder="e.g. 6907 21"></div>
+  <div><label for="i_pkgs">Packages and weight</label><input id="i_pkgs" placeholder="e.g. 2,300 boxes, 52 ton"></div>
+  <div></div>
+  <div><label for="i_buy">Main freight, buy (USD)</label><input id="i_buy" type="number" placeholder="From rate card"></div>
+  <div><label for="i_sell">Main freight, sell (USD)</label><input id="i_sell" type="number" placeholder="From rate card"></div>
+  <div class="full"><label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="i_truck" style="width:auto" checked> Also book our truck for pickup to port or delivery from port</label></div>
+ </div><p class="hint">Saving creates the job with its milestones, document checklist and standard local charges for this mode.</p></div>
+ <div class="mf"><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="saveintl">Create job</button></div>`);
+ intlRate();
+}
+function truckFor(id){
+ const j=intl.find(x=>x.job===id),c=cust(j.cust),city=p=>p.replace(/\s*\(.*?\)/,"").split(",")[0].trim();
+ const exp=j.kind==="Export",from=exp?c.city:city(j.pod),to=exp?city(j.pol):c.city;
+ linkJob=id;bookingModal("form");
+ $("#f_cust").value=c.id;custFill();fill("f_from",from);fill("f_to",to);
+ fill("f_date",iso(d(exp?Math.max(0,j.etd-3):Math.max(0,j.eta+1))));
+ fill("f_mat",(j.ship.Goods||c.material).split(",")[0]);routeFill();
+ fill("f_cnee",exp?"Port / CFS gate-in":c.name);fill("f_addr",exp?to+" port":c.city);
+ $("#custhint").textContent=exp?`Pickup from ${c.name} and drop at ${to} port, 3 days before sailing.`:`Pickup at ${from} port after arrival and deliver to ${c.name}.`;
+}
+function intlRate(){const r=RATE[iv("i_pol")+"|"+iv("i_pod")+"|"+iv("i_mode")];if(r){fill("i_buy",r[0]);fill("i_sell",r[1])}}
+function intlKind(){
+ const exp=iv("i_kind")==="Export",air=iv("i_mode")==="Air";
+ $("#l_party").textContent=exp?"Overseas buyer (consignee)":"Overseas supplier (shipper)";
+ fill("i_pol",exp?(air?"Mumbai (BOM)":"Mundra"):(air?"Shanghai (PVG), China":"Shanghai, China"));
+ fill("i_pod",exp?(air?"New York, USA":"Jebel Ali, UAE"):(air?"Ahmedabad (AMD)":"Nhava Sheva"));
+ fill("i_inco",exp?"CIF":"FOB");
+ $("#i_cont").disabled=iv("i_mode")!=="Sea FCL";if($("#i_cont").disabled)$("#i_cont").value="";
+ intlRate();
+}
+function saveIntl(){
+ const c=cust(iv("i_cust")),wantTruck=$("#i_truck")&&$("#i_truck").checked;
+ if(!c){toast("Choose a customer to create the job.");$("#i_cust").focus();return}
+ const kind=iv("i_kind"),mode=iv("i_mode"),exp=kind==="Export",sea=mode!=="Air";
+ const job=(exp?"EXP-":"IMP-")+(intlSeq++),party=iv("i_party")||"Not added",agent=iv("i_agent")||"Not added";
+ const days=id=>Math.round((new Date(iv(id))-now)/DAY);
+ const goods=(iv("i_goods")||"General cargo")+(iv("i_pkgs")?", "+iv("i_pkgs"):"");
+ const cha={"Customs broker (CHA)":"Om Customs Brokers"};
+ const parties=exp?{"Shipper":c.name+", "+c.city,"Consignee":party,"Overseas agent":agent,...cha}:{"Shipper":party,"Consignee":c.name+", "+c.city,"Overseas agent":agent,...cha};
+ const ship=sea?{"Containers":mode==="Sea LCL"?"Shared container (LCL)":(iv("i_cont")||"Not added"),"Container no.":"Added after booking with the line","B/L no.":"Issued after sailing"}:{"MAWB no.":"Issued at booking"};
+ ship[exp?"Shipping bill":"Bill of entry"]="Not filed yet";ship["HS code"]=iv("i_hs")||"Not added";ship["Goods"]=goods;
+ if(exp)ship["Linked trucking"]="Not booked yet";
+ const docs=["Commercial invoice","Packing list",exp?"Shipping bill":(sea?"Bill of lading":"Airway bill"),exp?(sea?"Bill of lading":"Airway bill"):"Bill of entry",exp?"Certificate of origin":"Delivery order"].map(x=>[x,0]);
+ const cost=[[sea?"Ocean freight":"Air freight","USD",+iv("i_buy")||0,+iv("i_sell")||0],["CHA and customs","INR",9000,12000],[exp?"Trucking to port":"Delivery from port","INR",30000,36000]];
+ if(mode==="Sea LCL")cost.push(["CFS charges","INR",8000,10000]);
+ intl.unshift({job,kind,mode,cust:c.id,inco:iv("i_inco"),parties,pol:iv("i_pol"),pod:iv("i_pod"),etd:days("i_etd"),eta:days("i_eta"),ship,ms:exp?MS_EXP:MS_IMP,at:0,docs,cost});
+ closeModal();location.hash="intl";render();
+ if(wantTruck){truckFor(job);toast(`Job ${job} created. Now check the truck booking and save.`);return}
+ toast(`Job ${job} created with its milestones, document checklist and standard charges.`);
+}
+function intlModal(id){
+ const j=intl.find(x=>x.job===id),buy=costTot(j,2),sell=costTot(j,3),pend=j.docs.filter(x=>!x[1]).length;
+ openModal(mh(`${j.job}: ${port(j.pol)} to ${port(j.pod)}`)+`<div class="mb">
+ <div class="row" style="margin-bottom:16px"><span class="tag info">${j.kind}, ${j.mode}</span><span class="tag info">Incoterm ${j.inco}</span><span class="tag ${pend?"warn":"good"}">${pend?pend+" documents pending":"All documents received"}</span></div>
+ <div class="grid2">
+  <div><h3 style="margin-bottom:6px">Shipment</h3><dl class="kv"><dt>Customer</dt><dd>${esc(cust(j.cust).name)}</dd><dt>Port of loading</dt><dd>${esc(j.pol)}</dd><dt>Port of discharge</dt><dd>${esc(j.pod)}</dd><dt>ETD / ETA</dt><dd>${fmt(d(j.etd))} / ${fmt(d(j.eta))}</dd>${Object.entries(j.ship).map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+   <h3 style="margin:18px 0 6px">Parties</h3><dl class="kv">${Object.entries(j.parties).map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>
+  <div><h3 style="margin-bottom:8px">Milestones</h3>
+   <ol class="ms">${j.ms.map((s,k)=>`<li class="${k<j.at?"done":k===j.at?"now":""}">${s}</li>`).join("")}</ol>
+   ${j.at<j.ms.length-1?`<button class="btn small primary" data-act="ims" data-id="${j.job}">Mark “${j.ms[j.at+1]}” done</button>`:""}
+   <h3 style="margin:18px 0 6px">Documents</h3>
+   ${j.docs.map((x,k)=>`<div class="money"><span>${x[0]}</span>${x[1]?'<span class="tag good">Received</span>':`<button class="btn small" data-act="idoc" data-id="${j.job}" data-k="${k}">Upload</button>`}</div>`).join("")}
+  </div>
+ </div>
+ <h3 style="margin:22px 0 6px">Costing</h3>
+ <div class="table-wrap"><table><thead><tr><th>Charge</th><th class="num">Buy</th><th class="num">Sell</th><th class="num">Margin (₹)</th></tr></thead><tbody>
+ ${j.cost.map(c=>`<tr><td>${c[0]}</td><td class="num">${cm(c[1],c[2])}</td><td class="num">${cm(c[1],c[3])}</td><td class="num">${rs(inr(c[1],c[3]-c[2]))}</td></tr>`).join("")}
+ <tr><td><b>Total in ₹</b></td><td class="num"><b>${rs(buy)}</b></td><td class="num"><b>${rs(sell)}</b></td><td class="num"><b>${rs(sell-buy)}</b></td></tr></tbody></table></div>
+ <p class="hint">Dollar charges converted at this job’s rate of ₹${USD} per USD.</p>
+ </div><div class="mf">${!j.ship["Linked trucking"]||j.ship["Linked trucking"]==="Not booked yet"?`<button class="btn" data-act="itruck" data-id="${j.job}">Book truck for this job</button>`:""}<button class="btn primary" data-act="iinv" data-id="${j.job}">Create invoice</button></div>`);
+}
+
+R.payments=()=>{
+ const open=invoices.filter(i=>!i.paid);
+ const bucket=(a,b)=>open.filter(i=>i.days>=a&&i.days<b).reduce((s,i)=>s+i.amt,0);
+ return `<div class="head"><div><h1>Payments</h1><p>Who owes you, and for how long.</p></div>
+  <button class="btn primary" data-act="bank">Import bank statement</button></div>
+ <div class="stats">
+  <div class="stat"><b>${rs(bucket(0,15))}</b><span>Under 15 days</span></div>
+  <div class="stat"><b>${rs(bucket(15,30))}</b><span>15 to 30 days</span></div>
+  <div class="stat"><b>${rs(bucket(30,60))}</b><span>30 to 60 days</span></div>
+  <div class="stat"><b>${rs(bucket(60,999))}</b><span>Over 60 days</span></div>
+ </div>
+ <section class="panel"><div class="table-wrap"><table>
+  <thead><tr><th>Invoice</th><th>Customer</th><th>LRs covered</th><th class="num">Amount</th><th>Age</th><th></th></tr></thead>
+  <tbody>${invoices.map(i=>`<tr><td><b>${i.no}</b></td><td>${esc(cust(i.cust).name)}</td><td class="muted">${i.lrs.join(", ")}</td><td class="num">${rs(i.amt)}</td>
+   <td>${i.paid?'<span class="tag good">Paid</span>':`<span class="tag ${i.days>30?"bad":i.days>15?"warn":"info"}">${i.days} days</span>`}</td>
+   <td style="text-align:right">${i.paid?"":`<button class="btn small" data-act="remind" data-id="${i.no}">Send reminder</button>`}</td></tr>`).join("")}</tbody>
+ </table></div></section>`;
+};
+
+R.fleet=()=>`
+ <div class="head"><div><h1>Fleet & documents</h1><p>You get a reminder 30 days before anything expires.</p></div></div>
+ <section class="panel"><div class="table-wrap"><table>
+  <thead><tr><th>Truck</th><th>Model</th><th>Driver</th>${["Insurance","Permit","Fitness","PUC"].map(k=>`<th>${k}</th>`).join("")}</tr></thead>
+  <tbody>${vehicles.map(v=>`<tr><td>${plate(v.no)}</td><td>${esc(v.model)}${v.own?"":' <span class="tag info">Hired</span>'}</td><td>${esc(v.driver)}</td>
+   ${["Insurance","Permit","Fitness","PUC"].map(k=>{const x=v.docs[k];return `<td><span class="tag ${x<0?"bad":x<=30?"warn":"good"}">${x<0?"Expired":fmt(d(x))}</span></td>`}).join("")}</tr>`).join("")}</tbody>
+ </table></div></section>`;
+
+// ---------- modal ----------
+function openModal(html){$("#modal").innerHTML=html;$("#scrim").classList.add("open");document.body.style.overflow="hidden";const f=$("#modal").querySelector("button,input,select,textarea");f&&f.focus()}
+function closeModal(){$("#scrim").classList.remove("open");document.body.style.overflow=""}
+$("#scrim").addEventListener("click",e=>{if(e.target.id==="scrim")closeModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+const mh=t=>`<div class="mh"><h2>${t}</h2><button class="x" data-act="close" aria-label="Close">×</button></div>`;
+
+// Trip detail
+function tripModal(lr){
+ const t=trips.find(x=>x.lr===lr),v=veh(t.veh),c=cust(t.cust),ex=expTotal(t),bal=t.advance-ex,i=STEPS.indexOf(t.status);
+ openModal(mh(`${t.job}: ${t.from} to ${t.to}`)+`<div class="mb">
+  <div class="row" style="justify-content:space-between;margin-bottom:14px"><span class="plate big">${esc(t.veh)}</span>${statusTag(t.status)}</div>
+  <div class="steps" style="margin-bottom:6px">${STEPS.map((s,j)=>`<i class="${j<=i?"on":""}"></i>`).join("")}</div>
+  <div class="row muted" style="justify-content:space-between;font-size:.8rem;margin-bottom:18px">${STEPS.map(s=>`<span>${s}</span>`).join("")}</div>
+  <div class="grid2">
+   <div><h3 style="margin-bottom:6px">Shipment details</h3><dl class="kv">
+    <dt>Job ID</dt><dd><b>${t.job}</b></dd><dt>LR no.</dt><dd>${t.lr}</dd>
+    <dt>Customer invoice</dt><dd>${esc(t.custInv||"Not added")}</dd><dt>E-way bill</dt><dd>${esc(t.ewb||"Not added")}</dd>
+    <dt>Consignor</dt><dd>${esc(c.name)}<br><small class="muted">${esc(t.pick||c.city)}</small></dd>
+    <dt>Consignee</dt><dd>${esc(t.cnee||"Not added")}<br><small class="muted">${esc(t.cneeAddr||t.to)}</small></dd>
+    <dt>Goods</dt><dd>${t.pkgs?t.pkgs+" "+esc(t.pkgType)+", ":""}${esc(t.material)}, ${t.weight} ton</dd>
+    <dt>Goods value</dt><dd>${t.value?rs(t.value):"Not added"}</dd>
+    <dt>Driver</dt><dd>${esc(v.driver)}</dd><dt>Loading date</dt><dd>${fmt(t.date)}</dd><dt>Freight</dt><dd>${rs(t.freight)}</dd></dl>
+    <h3 style="margin:18px 0 6px">Expenses</h3>
+    ${t.exp.length?t.exp.map(e=>`<div class="money"><span>${e.t}${e.n?` <small class="muted">${esc(e.n)}</small>`:""}</span><span>${rs(e.a)}</span></div>`).join(""):'<p class="muted">No expenses yet. The driver can add them from his phone.</p>'}
+    <button class="btn small" style="margin-top:10px" data-act="scan" data-id="${t.lr}">Add expense from photo</button>
+   </div>
+   <div>
+    <h3 style="margin-bottom:6px">Driver settlement</h3>
+    <div class="money"><span>Advance given</span><span>${rs(t.advance)}</span></div>
+    <div class="money"><span>Expenses paid by driver</span><span>− ${rs(ex)}</span></div>
+    <div class="money total"><span>${bal>=0?"Collect from driver":"Pay to driver"}</span><span>${rs(Math.abs(bal))}</span></div>
+    <h3 style="margin:18px 0 6px">Trip profit</h3>
+    <div class="money"><span>Freight</span><span>${rs(t.freight)}</span></div>
+    <div class="money"><span>Expenses</span><span>− ${rs(ex)}</span></div>
+    ${v.own?"":`<div class="money"><span>Truck hire (broker)</span><span>− ${rs(v.hire)}</span></div>`}
+    <div class="callout ${profit(t)>=5000?"good":"bad"}"><b>${rs(profit(t))}</b> profit on this trip</div>
+    <h3 style="margin:18px 0 6px">Billing</h3>
+    ${t.inv?`<div class="money"><span>Freight invoice</span><b>${t.inv}</b></div><div class="money" style="border:0"><span>Status</span>${invStatus(t.inv)}</div>`:`<p class="muted" style="margin:0 0 8px">Not billed yet.</p><button class="btn small" data-act="mkinv" data-id="${t.lr}">Create invoice</button>`}
+   </div>
+  </div></div>
+  <div class="mf"><button class="btn" data-act="bilty" data-id="${t.lr}">View LR / bilty</button>
+   ${i<3?`<button class="btn primary" data-act="advance" data-id="${t.lr}">Mark as ${STEPS[i+1].toLowerCase()}</button>`:""}
+   ${t.status==="Delivered"?`<button class="btn primary" data-act="settle" data-id="${t.lr}">Settle with driver</button>`:""}</div>`);
+}
+
+// Expense scan (simulated)
+function scanModal(lr){
+ openModal(mh("Add expense from photo")+`<div class="mb"><div class="scan" id="scanBox">
+  <p style="margin:0 0 10px">The driver takes a photo of the diesel slip, toll receipt or bill.</p>
+  <button class="btn primary" data-act="doscan" data-id="${lr}">Use sample diesel slip</button></div></div>`);
+}
+function doScan(lr){
+ $("#scanBox").innerHTML='<div class="spinner"></div>Reading the slip…';
+ setTimeout(()=>{
+  $("#scanBox").outerHTML=`<p class="muted" style="margin-top:0">Read from the photo. Check and confirm.</p>
+  <div class="form"><div><label>Type</label><input id="sx_t" class="filled" value="Diesel"></div><div><label>Amount</label><input id="sx_a" class="filled" value="4520" inputmode="numeric"></div>
+  <div><label>Pump</label><input id="sx_n" class="filled" value="Reliance pump, Palanpur"></div><div><label>Litres</label><input class="filled" value="48.2"></div></div>
+  <div class="mf" style="padding:16px 0 0;border:0"><button class="btn primary" data-act="saveexp" data-id="${lr}">Confirm expense</button></div>`;
+ },1300);
+}
+
+// Bilty
+function biltyModal(lr){
+ const t=trips.find(x=>x.lr===lr),c=cust(t.cust),gst=Math.round(t.freight*.05);
+ openModal(mh("LR / bilty preview")+`<div class="mb"><div class="bilty">
+  <div class="top"><div><div class="co">MEHTA ROADLINES</div><div class="muted">Naroda GIDC, Ahmedabad · GSTIN 24AAQFM1180R1Z2</div></div>
+   <div style="text-align:right"><b style="font-size:1.1rem">${t.lr}</b><div>${t.date.toLocaleDateString("en-IN")}</div></div></div>
+  <div class="cols"><div class="box"><b>Consignor</b>${esc(c.name)}, ${esc(t.pick||c.city)}<br>GSTIN ${c.gst}</div><div class="box"><b>Consignee</b>${esc(t.cnee||"–")}, ${esc(t.cneeAddr||t.to)}</div>
+   <div class="box"><b>From / To</b>${t.from} to ${t.to}</div><div class="box"><b>Vehicle</b>${plate(t.veh)}</div>
+   <div class="box"><b>Goods</b>${t.pkgs?t.pkgs+" "+esc(t.pkgType)+", ":""}${esc(t.material)}, ${t.weight} ton</div><div class="box"><b>E-way bill</b>${esc(t.ewb||"Not added")}</div><div class="box"><b>Customer invoice / value</b>${esc(t.custInv||"–")}, ${t.value?rs(t.value):"–"}</div><div class="box"><b>Job ID</b>${t.job}</div></div>
+  <div class="money"><span>Freight</span><span>${rs(t.freight)}</span></div>
+  <div class="money"><span>GST 5% (RCM, payable by consignor)</span><span>${rs(gst)}</span></div>
+  <div class="money total"><span>Total</span><span>${rs(t.freight)}</span></div>
+ </div></div>
+ <div class="mf"><button class="btn" data-act="print">Print</button><button class="btn primary" data-act="share">Share on WhatsApp</button></div>`);
+}
+
+// New booking
+let draftFrom="form",linkJob=null;
+function bookingModal(tab){
+ draftFrom=tab||"form";
+ const tabs=[["form","Fill form"],["wa","Paste WhatsApp message"],["repeat","Repeat a past trip"]];
+ openModal(mh(linkJob?`Book truck for ${linkJob}`:"New booking")+`<div class="mb">
+  <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${k===draftFrom}" data-act="btab" data-id="${k}">${l}</button>`).join("")}</div>
+  <div id="btop">${draftFrom==="wa"?waBox():draftFrom==="repeat"?repeatBox():""}</div>
+  ${bookingForm()}
+ </div><div class="mf"><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="savebooking">Save booking</button></div>`);
+}
+function waBox(){return `<label for="wamsg">Customer’s message</label>
+ <textarea id="wamsg">Namaste bhai, kal 2 truck chahiye Surat se Pune, 18 ton kapda. Rate pehle wala hi. – Shree Textiles</textarea>
+ <div class="row" style="margin:10px 0 18px"><button class="btn primary" data-act="parse">Fill booking from message</button><span class="hint">Works with Hindi, Gujarati and English messages.</span></div>`}
+function repeatBox(){
+ const past=[...trips].sort((a,b)=>b.date-a.date).slice(0,4);
+ return `<ul class="list panel" style="margin-bottom:18px">${past.map(t=>`<li><div class="grow"><b>${esc(cust(t.cust).name)}</b>: ${t.from} to ${t.to}<small>${t.material}, ${t.weight} ton, ${rs(t.freight)}</small></div><button class="btn small" data-act="repeat" data-id="${t.lr}">Repeat</button></li>`).join("")}</ul>`;
+}
+function bookingForm(){
+ const opt=(arr,sel)=>arr.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?"selected":""}>${esc(l)}</option>`).join("");
+ return `<div class="form">
+  <div class="full"><label for="f_cust">Customer</label><select id="f_cust" data-act="custchange"><option value="">Choose customer</option>${opt(customers.map(c=>[c.id,c.name+", "+c.city]))}</select><div class="hint" id="custhint">Pick a saved customer and their GST, address and usual rate fill in.</div></div>
+  <div><label for="f_from">From</label><select id="f_from" data-act="routechange">${opt(CITIES.map(c=>[c,c]))}</select></div>
+  <div><label for="f_to">To</label><select id="f_to" data-act="routechange">${opt(CITIES.map(c=>[c,c]),"Pune")}</select></div>
+  <div><label for="f_date">Loading date</label><input type="date" id="f_date" value="${iso(d(1))}"></div>
+  <div><label for="f_trucks">Trucks</label><input id="f_trucks" type="number" min="1" value="1"></div>
+  <div><label for="f_mat">Material</label><input id="f_mat" placeholder="e.g. Textile bales"></div>
+  <div><label for="f_wt">Weight (ton)</label><input id="f_wt" type="number" min="1" placeholder="18"></div>
+  <div><label for="f_rate">Freight per truck (₹)</label><input id="f_rate" type="number" placeholder="Fills from route"></div>
+  <div><label for="f_cnee">Consignee</label><input id="f_cnee" placeholder="Who receives the goods"></div>
+  <div><label for="f_addr">Delivery address</label><input id="f_addr" placeholder="Area, city"></div>
+  <div><label for="f_pkgs">Packages</label><input id="f_pkgs" type="number" min="1" placeholder="120"></div>
+  <div><label for="f_val">Goods value (₹)</label><input id="f_val" type="number" placeholder="From customer invoice"></div>
+  <div><label for="f_cinv">Customer invoice no.</label><input id="f_cinv" placeholder="e.g. ST/1190"></div>
+  <div><label for="f_ewb">E-way bill no.</label><input id="f_ewb" placeholder="12 digits"><div class="hint">In the live app, goods and consignee details fill in from this number.</div></div>
+  <div><label for="f_veh">Truck</label><select id="f_veh">${opt(vehicles.filter(v=>!trips.some(t=>t.veh===v.no&&(t.status==="In transit"||t.status==="Loaded"))).map(v=>[v.no,v.no+" ("+v.driver+")"]))}</select><div class="hint">Only free trucks are shown.</div></div>
+ </div>`;
+}
+function fill(id,val){const el=$("#"+id);if(!el||val==null||val==="")return;el.value=val;el.classList.add("filled")}
+function routeFill(){
+ const f=$("#f_from").value,t=$("#f_to").value,r=routes.find(x=>x.from===f&&x.to===t);
+ if(r){fill("f_rate",r.rate)}
+}
+function custFill(){
+ const c=cust($("#f_cust").value);if(!c)return;
+ $("#f_cust").classList.add("filled");
+ $("#custhint").textContent=`GSTIN ${c.gst}, phone ${c.phone}`;
+ fill("f_from",c.city);fill("f_mat",c.material);routeFill();
+}
+function parseMsg(){
+ const m=$("#wamsg").value,low=m.toLowerCase();
+ const c=customers.find(x=>low.includes(x.name.toLowerCase())||low.includes(x.name.split(" ")[0].toLowerCase()));
+ const found=CITIES.map(x=>({x,i:low.indexOf(x.toLowerCase())})).filter(o=>o.i>=0).sort((a,b)=>a.i-b.i).map(o=>o.x);
+ const tons=(low.match(/(\d+(?:\.\d+)?)\s*(ton|tonne|t\b)/)||[])[1];
+ const trucks=(low.match(/(\d+)\s*(truck|gaadi|gadi)/)||[])[1];
+ const mats={kapda:"Textile bales",kapad:"Textile bales",tiles:"Ceramic tiles",pipe:"Steel pipes",dawai:"Medicines",anaj:"Food grains"};
+ const mat=Object.keys(mats).find(k=>low.includes(k));
+ if(c){$("#f_cust").value=c.id;custFill()}
+ if(found[0])fill("f_from",found[0]);
+ if(found[1])fill("f_to",found[1]);
+ fill("f_date",iso(low.includes("aaj")?d(0):low.includes("parso")?d(2):d(1)));
+ fill("f_trucks",trucks);fill("f_wt",tons);fill("f_mat",mat?mats[mat]:"");
+ routeFill();
+ toast("Booking filled from the message. Check the green fields and save.");
+}
+function repeatTrip(lr){
+ const t=trips.find(x=>x.lr===lr);
+ $("#f_cust").value=t.cust;custFill();fill("f_from",t.from);fill("f_to",t.to);fill("f_mat",t.material);fill("f_wt",t.weight);fill("f_rate",t.freight);fill("f_date",iso(d(1)));fill("f_cnee",t.cnee);fill("f_addr",t.cneeAddr);fill("f_pkgs",t.pkgs);
+ toast("Copied from "+t.lr+". Only the date and truck need checking.");
+}
+function saveBooking(){
+ const c=$("#f_cust").value,rate=+$("#f_rate").value,wt=+$("#f_wt").value;
+ if(!c){toast("Choose a customer to save the booking.");$("#f_cust").focus();return}
+ if(!rate){toast("Add the freight amount to save the booking.");$("#f_rate").focus();return}
+ const n=Math.max(1,+$("#f_trucks").value||1),made=[],job=linkJob||("JOB-"+(jobSeq++)),cc=cust(c);
+ for(let k=0;k<n;k++){
+  const lr="LR-"+(lrSeq++);made.push(lr);
+  trips.push({lr,cust:c,from:$("#f_from").value,to:$("#f_to").value,date:new Date($("#f_date").value),veh:$("#f_veh").value,material:$("#f_mat").value||"General goods",weight:wt||10,freight:rate,advance:0,status:"Booked",exp:[],job,inv:null,cnee:$("#f_cnee").value,cneeAddr:$("#f_addr").value||$("#f_to").value,pick:cc.city,pkgs:+$("#f_pkgs").value||0,pkgType:"packages",value:+$("#f_val").value||0,custInv:$("#f_cinv").value,ewb:$("#f_ewb").value});
+ }
+ if(linkJob){const j=intl.find(x=>x.job===linkJob);j.ship["Linked trucking"]=`${made.join(", ")} (${$("#f_from").value} to ${$("#f_to").value})`;linkJob=null;closeModal();location.hash="intl";render();intlModal(j.job);toast(`Truck booked. ${made.join(", ")} linked to ${j.job}.`);return}
+ closeModal();location.hash="bookings";render();
+ toast(`Booking ${job} saved. ${made.join(", ")} created.`);
+}
+
+// Reminder
+function remindModal(no){
+ const i=invoices.find(x=>x.no===no),c=cust(i.cust);
+ const msg=`Namaste ${c.name} ji,\n\nInvoice ${i.no} (LR ${i.lrs.join(", ")}) for ${rs(i.amt)} is pending for ${i.days} days.\nPlease arrange payment at your earliest.\n\nUPI: mehtaroadlines@upi\n– Mehta Roadlines`;
+ openModal(mh("Payment reminder")+`<div class="mb"><p class="muted" style="margin-top:0">This goes to ${c.phone} on WhatsApp, with the invoice PDF attached.</p><div class="wa">${esc(msg)}</div>
+  <p class="hint">You can set reminders to go automatically every 7 days for overdue invoices.</p></div>
+  <div class="mf"><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="sendremind">Send reminder</button></div>`);
+}
+function bankImport(){
+ openModal(mh("Import bank statement")+`<div class="mb" id="bankBox"><div class="scan"><div class="spinner"></div>Matching payments to invoices…</div></div>`);
+ setTimeout(()=>{
+  const hits=[invoices.find(i=>i.no==="INV-325"),invoices.find(i=>i.no==="INV-329")];
+  $("#bankBox").innerHTML=`<p style="margin-top:0">Found 2 customer payments in the statement that match open invoices.</p>
+   <ul class="list panel">${hits.map(i=>`<li><span class="tag good">Match</span><div class="grow"><b>${esc(cust(i.cust).name)}</b> paid ${rs(i.amt)}<small>NEFT/UPI credit matched to ${i.no}</small></div></li>`).join("")}</ul>`;
+  $("#modal").insertAdjacentHTML("beforeend",`<div class="mf"><button class="btn primary" data-act="applybank">Mark 2 invoices paid</button></div>`);
+ },1400);
+}
+
+// ---------- events ----------
+document.addEventListener("click",e=>{
+ const el=e.target.closest("[data-act]");if(!el)return;
+ const a=el.dataset.act,id=el.dataset.id;
+ if(el.tagName==="SELECT")return;
+ switch(a){
+  case "close":closeModal();break;
+  case "trip":tripModal(id);break;
+  case "newbooking":e.preventDefault();linkJob=null;bookingModal("form");break;
+  case "itruck":truckFor(id);break;
+  case "btab":bookingModal(id);break;
+  case "parse":parseMsg();break;
+  case "repeat":repeatTrip(id);break;
+  case "savebooking":saveBooking();break;
+  case "scan":scanModal(id);break;
+  case "doscan":doScan(id);break;
+  case "saveexp":{const t=trips.find(x=>x.lr===id);t.exp.push({t:$("#sx_t").value,a:+$("#sx_a").value||0,n:$("#sx_n").value});render();tripModal(id);toast("Expense added. Settlement and profit updated.");break}
+  case "advance":{const t=trips.find(x=>x.lr===id);t.status=STEPS[STEPS.indexOf(t.status)+1];render();tripModal(id);toast(`${t.lr} marked as ${t.status.toLowerCase()}.`+(t.status==="Delivered"?" Customer gets the POD on WhatsApp.":""));break}
+  case "settle":{const t=trips.find(x=>x.lr===id);t.status="Settled";render();tripModal(id);toast(`Settled with ${veh(t.veh).driver}.`);break}
+  case "mkinv":{const t=trips.find(x=>x.lr===id),no="INV-"+(invSeq++);t.inv=no;invoices.push({no,cust:t.cust,amt:t.freight,days:0,lrs:[t.lr],paid:false});render();tripModal(id);toast(`Invoice ${no} created for ${t.lr}.`);break}
+  case "ijob":intlModal(id);break;
+  case "newintl":intlForm();break;
+  case "saveintl":saveIntl();break;
+  case "ims":{const j=intl.find(x=>x.job===id);j.at++;render();intlModal(id);toast(`“${j.ms[j.at]}” done. Customer and overseas agent get the update on WhatsApp and email.`);break}
+  case "idoc":{const j=intl.find(x=>x.job===id),x=j.docs[+el.dataset.k];x[1]=1;render();intlModal(id);toast(`${x[0]} uploaded to ${j.job}.`);break}
+  case "iinv":{const j=intl.find(x=>x.job===id);toast(`Invoice ready for ${j.job}: dollar charges in USD, local charges in ₹ with GST.`);break}
+  case "bilty":biltyModal(id);break;
+  case "print":window.print();break;
+  case "share":toast("In the real app this opens WhatsApp with the LR as a PDF.");break;
+  case "remind":remindModal(id);break;
+  case "sendremind":closeModal();toast("Reminder sent on WhatsApp.");break;
+  case "bank":bankImport();break;
+  case "applybank":["INV-325","INV-329"].forEach(n=>invoices.find(i=>i.no===n).paid=true);closeModal();render();toast("2 invoices marked paid.");break;
+ }
+});
+document.addEventListener("change",e=>{
+ if(e.target.id==="f_cust")custFill();
+ if(e.target.id==="f_from"||e.target.id==="f_to")routeFill();
+ if(e.target.id==="i_kind"||e.target.id==="i_mode")intlKind();
+ if(e.target.id==="i_pol"||e.target.id==="i_pod")intlRate();
+ if(e.target.id==="i_cust"){const c=cust(e.target.value);if(c){fill("i_goods",c.material);e.target.classList.add("filled")}}
+});
+document.addEventListener("input",e=>{if(e.target.id==="q")$("#brows").innerHTML=bookingRows(e.target.value)});
+window.addEventListener("hashchange",render);
+
+// theme toggle
+$("#themeBtn").addEventListener("click",()=>{
+ const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+ r.dataset.theme=dark?"light":"dark";
+ try{localStorage.setItem("safar-theme",r.dataset.theme)}catch(_){}
+});
+try{const s=localStorage.getItem("safar-theme");if(s)document.documentElement.dataset.theme=s}catch(_){}
+
+render();
+})();
+</script>
+</body>
+</html>
